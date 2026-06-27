@@ -1,0 +1,43 @@
+<group name="corp_local,kerberos,credential_access,">
+  <rule id="100001" level="12">
+    <if_group>windows</if_group>
+    <field name="win.system.eventID">^4769$</field>
+    <field name="win.eventdata.ticketEncryptionType">^0x17$</field>
+    <description>Kerberoasting: RC4 service ticket requested for $(win.eventdata.serviceName) by $(win.eventdata.targetUserName)</description>
+    <mitre><id>T1558.003</id></mitre>
+    <group>kerberoasting,</group>
+  </rule>
+
+  <rule id="100002" level="0">
+    <if_sid>100001</if_sid>
+    <field name="win.eventdata.serviceName">^svc_legacy_</field>
+    <description>FP suppression: expected RC4 ticket for legacy service account</description>
+  </rule>
+
+  <rule id="100003" level="15">
+    <if_group>windows</if_group>
+    <field name="win.system.eventID">^4768$</field>
+    <field name="win.eventdata.ticketEncryptionType">^0x17$</field>
+    <description>Possible Golden Ticket: TGT with RC4 encryption presented - $(win.eventdata.targetUserName) from $(win.eventdata.ipAddress)</description>
+    <mitre><id>T1558.001</id></mitre>
+    <group>golden_ticket,</group>
+  </rule>
+
+  <rule id="100004" level="10">
+    <if_group>windows</if_group>
+    <field name="win.system.eventID">^4663$</field>
+    <field name="win.eventdata.objectName">employees_confidential</field>
+    <description>HR sensitive file accessed: $(win.eventdata.objectName) by $(win.eventdata.subjectUserName)</description>
+    <mitre><id>T1078.002</id></mitre>
+    <group>file_access,sensitive_data,</group>
+  </rule>
+
+  <rule id="100005" level="14">
+    <if_group>sysmon</if_group>
+    <field name="win.system.eventID">^10$</field>
+    <field name="win.eventdata.targetImage" type="pcre2">(?i)lsass\.exe$</field>
+    <description>LSASS process access: $(win.eventdata.sourceImage) accessed lsass.exe - possible credential dumping</description>
+    <mitre><id>T1003.001</id></mitre>
+    <group>credential_dumping,lsass_access,</group>
+  </rule>
+</group>
